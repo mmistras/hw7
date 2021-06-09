@@ -70,13 +70,13 @@ exports.handler = async function(event) {
   // get the documents from the query
   let sections = sectionsQuery.docs
 
-  // loop through the documents
-  for (let i=0; i < sections.length; i++) {
+  // loop through the sections documents
+  for (let sectionIndex=0; sectionIndex < sections.length; sectionIndex++) {
     // get the document ID of the section
-    let sectionId = sections[i].id
+    let sectionId = sections[sectionIndex].id
 
     // get the data from the section
-    let sectionData = sections[i].data()
+    let sectionData = sections[sectionIndex].data()
     
     // create an Object to be added to the return value of our lambda
     let sectionObject = {}
@@ -94,6 +94,40 @@ exports.handler = async function(event) {
     returnValue.sections.push(sectionObject)
 
     // 🔥 your code for the reviews/ratings goes here
+    // ask Firebase for reviews with section matching sectionId in loop
+    let reviewsQuery = await db.collection('reviews').where(`sectionId`, `==`, sectionId).get()
+
+    // get reviews from query
+    let reviews = reviewsQuery.docs
+
+    // loop through the review documents
+    for (let reviewIndex=0; reviewIndex < reviews.length; reviewIndex++) {
+      // get the document ID of the review
+      let reviewsId = reviews[reviewIndex].id
+
+      // get the data from the review
+      let reviewData = reviews[reviewIndex].data()
+
+      // set a new Array as part of the return value
+      returnValue.reviews = []
+      reviewsObject = {
+        rating: reviewData.rating,
+        body: reviewData.body
+      }
+    
+      //average of reviews within section
+     let sectionRatingTotal = 0
+     let sectionRatingAvg = 0
+     sectionRatingTotal += reviewData.rating
+     sectionRatingAvg = sectionRatingTotal / reviews.length
+     console.log(sectionRatingAvg)
+     console.log(reviews.length)
+
+      // adding in appropriate components of each review for each section
+      returnValue.reviews.push(reviewData.rating)
+
+    }
+
   }
 
   // return the standard response
